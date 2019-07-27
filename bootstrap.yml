@@ -1,0 +1,250 @@
+sources:
+  - name: binutils
+    subdir: 'ports'
+    git: 'git://sourceware.org/git/binutils-gdb.git'
+    tag: 'binutils-2_32'
+    tools_required:
+      - host-autoconf-v2.69
+      - host-automake-v1.15
+    regenerate:
+      - args: ['autoreconf']
+        workdir: '@THIS_SOURCE_DIR@/ld'
+ 
+  - name: gcc
+    subdir: 'ports'
+    git: 'git://gcc.gnu.org/git/gcc.git'
+    tag: 'gcc-9_1_0-release'
+    tools_required:
+      - host-autoconf-v2.69
+      - host-automake-v1.11
+    regenerate:
+      # download_prerequisites should probably move to some "post_checkout" step.
+      - args: ['./contrib/download_prerequisites']
+        workdir: '@THIS_SOURCE_DIR@'
+      - args: ['autoconf']
+        workdir: '@THIS_SOURCE_DIR@/gcc'
+      - args: ['autoconf']
+        workdir: '@THIS_SOURCE_DIR@/libstdc++-v3'
+
+  - name: sigma-src
+    subdir: 'src'
+    git: 'git://www.github.com/sigma-os/sigma'
+    branch: 'master'
+    regenerate:
+      - args: ['git', 'submodule', 'update', '--init', '--recursive']
+        workdir: '@THIS_SOURCE_DIR@'
+
+tools:
+  - name: image-create
+    source:
+      subdir: 'ports'
+      git: 'https://gitlab.com/qookei/image_create'
+      branch: 'master'
+    configure:
+    - args: ['chmod', '+x', '@THIS_SOURCE_DIR@/image_create.sh']
+
+  - name: host-autoconf-v2.69
+    source:
+      name: autoconf-v2.69
+      subdir: 'ports'
+      url: 'https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.xz'
+      format: 'tar.xz'
+      extract_path: 'autoconf-2.69'
+    configure:
+      - args: ['@THIS_SOURCE_DIR@/configure', '--prefix=@PREFIX@']
+    compile:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'install']
+
+  - name: host-automake-v1.11
+    source:
+      name: automake-v1.11
+      subdir: 'ports'
+      git: 'http://git.savannah.gnu.org/r/automake.git'
+      tag: 'v1.11.6'
+      tools_required:
+        - host-autoconf-v2.69
+      regenerate:
+        - args: ['./bootstrap']
+    tools_required:
+      - host-autoconf-v2.69
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+        - 'MAKEINFO=/bin/true'
+    compile:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'install']
+      # Stop aclocal from complaining.
+      - args: ['ln', '-sf', '@PREFIX@/share/aclocal-1.11', '@PREFIX@/share/aclocal']
+
+  - name: host-automake-v1.15
+    source:
+        name: automake-v1.15
+        subdir: 'ports'
+        git: 'http://git.savannah.gnu.org/r/automake.git'
+        tag: 'v1.15.1'
+        tools_required:
+          - host-autoconf-v2.69
+        regenerate:
+          - args: ['./bootstrap']
+    tools_required:
+      - host-autoconf-v2.69
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+        - 'MAKEINFO=/bin/true'
+    compile:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'install']
+      # Stop aclocal from complaining.
+      - args: ['ln', '-sf', '@PREFIX@/share/aclocal-1.15', '@PREFIX@/share/aclocal']
+      
+  - name: host-libtool
+    exports_aclocal: true
+    source:
+      name: libtool
+      subdir: 'ports'
+      git: 'http://git.savannah.gnu.org/r/libtool.git'
+      tag: 'v2.4.5'
+      tools_required:
+        - host-autoconf-v2.69
+        - host-automake-v1.15
+      regenerate:
+        # libtool's ./bootstrap does a shallow clone with insufficient depth.
+        - args: ['git', 'submodule', 'update', '--init']
+        - args: ['./bootstrap']
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+    compile:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'install']
+
+  - name: cross-binutils
+    from_source: binutils
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+        - '--target=x86_64-sigma'
+        - '--with-sysroot=@SYSROOT_DIR@'
+        # On recent compilers, binutils 2.26 causes implicit-fallthrough warnings, among others.
+        - '--disable-werror'
+        - '--disable-nls'
+        # -g blows up the binary size.
+        - 'CFLAGS=-O2'
+    compile:
+      - args: ['make', '-j@PARALLELISM@', 'all-binutils', 'all-gas', 'all-ld']
+    install:
+      - args: ['make', 'install-binutils', 'install-gas', 'install-ld']
+      - args: |
+          for f in @PREFIX@/bin/x86_64-sigma-*; do
+            tf=$(basename $f | sed 's/x86_64-sigma/x86_64-sigma-kernel/')
+            ln -sf $(basename $f) @PREFIX@/bin/$tf
+          done
+
+  - name: kernel-gcc
+    from_source: gcc
+    tools_required:
+      - tool: cross-binutils
+        recursive: true
+      - tool: host-libtool
+        recursive: true
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+        - '--target=x86_64-sigma-kernel'
+        - '--with-sysroot=@BUILD_ROOT@/kernel-root'
+        - '--enable-languages=c,c++'
+        - '--disable-shared'
+        - '--disable-hosted-libstdcxx'
+        - '--without-headers'
+        - '--disable-nls'
+        # -g blows up GCC's binary size.
+        - 'CFLAGS=-O2'
+        - 'CXXFLAGS=-O2'
+    stages:
+      - name: compiler
+        compile:
+          # Copy rudimentary header files into the kernel sysroot.
+          - args: |
+              mkdir -p @BUILD_ROOT@/kernel-root/usr/include
+              cp -r @SOURCE_ROOT@/patches/kernel-libc/* @BUILD_ROOT@/kernel-root/usr/include/
+          # Set inhibit_libc to prevent libgcov build.
+          # This is also required to correctly build the target libraries later.
+          - args: ['make', '-j@PARALLELISM@', 'inhibit_libc=true', 'all-gcc']
+        install:
+          - args: ['make', 'install-gcc']
+          # GCC does *not* look for target-prefixed LD/AS.
+          # Instead, it searches a list of prefix directories. Link AS/LD to make it happy.
+          - args: ['mkdir', '-p', '@PREFIX@/x86_64-sigma-kernel/bin']
+          - args: ['ln', '-sf', '../../../cross-binutils/x86_64-sigma/bin/as',
+                               '@PREFIX@/x86_64-sigma-kernel/bin/as']
+          - args: ['ln', '-sf', '../../../cross-binutils/x86_64-sigma/bin/ld',
+                              '@PREFIX@/x86_64-sigma-kernel/bin/ld']
+
+      - name: libgcc
+        tools_required:
+          - tool: kernel-gcc
+            stage_dependencies: [compiler]
+        compile:
+          - args: ['make', '-j@PARALLELISM@', 'inhibit_libc=true', 'all-target-libgcc']
+        install:
+          - args: ['make', 'install-target-libgcc']
+      - name: libstdc++
+        tools_required:
+          - tool: kernel-gcc
+            stage_dependencies: [libgcc]
+        compile:
+          - args: ['make', '-j@PARALLELISM@', 'inhibit_libc=true', 'all-target-libstdc++-v3']
+        install:
+          - args: ['make', 'install-target-libstdc++-v3']
+
+packages:
+  - name: sigma-kernel
+    from_source: sigma-src
+    tools_required:
+      - tool: kernel-gcc
+        recursive: true
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
+        - '--prefix=/boot/sigma'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+  - name: sigma-initrd
+    from_source: sigma-src
+    configure: []
+    build:
+      - args: ['./initrd/build.sh']
+        workdir: '@THIS_SOURCE_DIR@'
+      - args: ['mv', './initrd.tar', '@BUILD_ROOT@/system-root/usr/sigma/bin/initrd.tar']
+        workdir: '@THIS_SOURCE_DIR@'
+
+  - name: sigma-system
+    from_source: sigma-src
+    tools_required:
+      - image-create
+    pkgs_required:
+      - sigma-kernel
+    configure:
+      - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
+      - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
+      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/hdd.bin', '1GiB', 'ext2', 'gpt', '@BUILD_ROOT@/system-root']
+    
+  
