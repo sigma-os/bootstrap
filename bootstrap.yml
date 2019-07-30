@@ -227,6 +227,7 @@ packages:
       - args: ['ninja', 'install']
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
+    
   - name: sigma-initrd
     from_source: sigma-src
     configure: []
@@ -242,6 +243,7 @@ packages:
       - image-create
     pkgs_required:
       - sigma-kernel
+      - sigma-initrd
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
