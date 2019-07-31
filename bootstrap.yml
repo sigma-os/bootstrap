@@ -220,7 +220,7 @@ packages:
         - 'meson'
         - '@THIS_SOURCE_DIR@'
         - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
-        - '--prefix=/boot/sigma'
+        - '--prefix=/usr/sigma'
         - '--libdir=lib'
     build:
       - args: ['ninja']
