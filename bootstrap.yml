@@ -30,7 +30,12 @@ sources:
     subdir: 'src'
     git: 'git://www.github.com/sigma-os/sigma'
     branch: 'master'
+    disable_shallow_fetch: true
     regenerate:
+      - args: ['git', 'remote', 'add', 'origin', 'https://www.github.com/sigma-os/sigma']
+        workdir: '@THIS_SOURCE_DIR@'
+      - args: ['git', 'checkout', 'master']
+        workdir: '@THIS_SOURCE_DIR@'
       - args: ['git', 'submodule', 'update', '--init', '--recursive']
         workdir: '@THIS_SOURCE_DIR@'
 
