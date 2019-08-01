@@ -230,6 +230,8 @@ packages:
     
   - name: sigma-initrd
     from_source: sigma-src
+    pkgs_required:
+      - sigma-kernel
     configure: []
     build:
       - args: ['./initrd/build.sh']
