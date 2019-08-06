@@ -232,6 +232,24 @@ packages:
       - args: ['ninja', 'install']
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: libsigma
+    from_source: sigma-src
+    tools_required:
+      - tool: kernel-gcc
+        recursive: true
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/libs/libsigma'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
     
   - name: sigma-initrd
     from_source: sigma-src
