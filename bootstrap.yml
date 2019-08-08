@@ -38,6 +38,17 @@ sources:
         workdir: '@THIS_SOURCE_DIR@'
       - args: ['git', 'submodule', 'update', '--init', '--recursive']
         workdir: '@THIS_SOURCE_DIR@'
+  
+  - name: slibc-src
+    subdir: 'src'
+    git: 'https://github.com/sigma-os/slibc.git'
+    branch: 'master'
+    disable_shallow_fetch: true
+    regenerate:
+      - args: ['git', 'remote', 'add', 'origin', 'https://github.com/sigma-os/slibc.git']
+        workdir: '@THIS_SOURCE_DIR@'
+      - args: ['git', 'checkout', 'master']
+        workdir: '@THIS_SOURCE_DIR@'
 
 tools:
   - name: image-create
@@ -250,6 +261,27 @@ packages:
       - args: ['ninja', 'install']
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: slibc
+    from_source: slibc-src
+    pkgs_required:
+      - libsigma
+    tools_required:
+      - tool: kernel-gcc
+        recursive: true
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+        - "-Dos_name=\"Sigma\""
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
     
   - name: sigma-initrd
     from_source: sigma-src
@@ -269,6 +301,8 @@ packages:
     pkgs_required:
       - sigma-kernel
       - sigma-initrd
+      - libsigma
+      - slibc
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
