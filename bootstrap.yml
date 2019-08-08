@@ -32,7 +32,7 @@ sources:
     branch: 'master'
     disable_shallow_fetch: true
     regenerate:
-      - args: ['git', 'remote', 'add', 'origin', 'https://www.github.com/sigma-os/sigma']
+      - args: ['git', 'remote', 'add', 'origin', 'https://github.com/sigma-os/Sigma.git']
         workdir: '@THIS_SOURCE_DIR@'
       - args: ['git', 'checkout', 'master']
         workdir: '@THIS_SOURCE_DIR@'
