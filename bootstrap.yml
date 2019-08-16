@@ -232,7 +232,7 @@ tools:
       - args:
         - '@THIS_SOURCE_DIR@/configure'
         - '--prefix=@PREFIX@'
-        - '--target=x86_64-sigma-system'
+        - '--target=x86_64-sigma'
         - '--with-sysroot=@SYSROOT_DIR@'
         - '--enable-languages=c,c++'
         - '--disable-multilib'
