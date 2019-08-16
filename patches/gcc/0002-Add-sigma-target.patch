@@ -1,4 +1,4 @@
-From e37c30a5c49ae5ad110ab006411a38a5ad45ff43 Mon Sep 17 00:00:00 2001
+From 408ef01061a4aef0a976695ce8f5916c65db8382 Mon Sep 17 00:00:00 2001
 From: Thomas Woertman <twoertman@gmail.com>
 Date: Fri, 16 Aug 2019 21:34:48 +0200
 Subject: [PATCH] Add sigma target
@@ -189,7 +189,7 @@ index 000000000..d0ea03716
 +	} while(0);
 +
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 91abc84da..7ed153a55 100644
+index 91abc84da..3160ced32 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -252,6 +252,21 @@ case ${host} in
@@ -198,8 +198,8 @@ index 91abc84da..7ed153a55 100644
    ;;
 +*-*-sigma*)
 +  extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
-+  sigma_target=${echo $os | sed -e 's|sigma|sigma-system|'}
-+  case ${sigma_target} in
++  target=`echo $target | sed -e '/-kernel/! s/x86_64-sigma/x86_64-sigma-system/g'`
++  case ${target} in
 +  *-sigma-system*)
 +	tmake_file="$tmake_file t-crtstuff-pic"
 +	tmake_file="$tmake_file t-slibgcc t-slibgcc-gld t-slibgcc-elf-ver t-libgcc-pic"
