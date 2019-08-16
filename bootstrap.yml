@@ -336,6 +336,7 @@ packages:
     from_source: sigma-src
     tools_required:
       - image-create
+      - system-gcc
     pkgs_required:
       - sigma-kernel
       - sigma-initrd
