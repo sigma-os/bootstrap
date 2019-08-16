@@ -39,6 +39,15 @@ sources:
       - args: ['git', 'submodule', 'update', '--init', '--recursive']
         workdir: '@THIS_SOURCE_DIR@'
 
+  - name: mlibc
+    subdir: 'src'
+    git: 'http://github.com/managarm/mlibc.git'
+    branch: 'master'
+    sources_required:
+      - sigma-src
+    regenerate:
+      - args: ['ln', '-sf', '@SOURCE_ROOT@/src/sigma-src/libs/libsigma', '@THIS_SOURCE_DIR@/subprojects/libsigma']
+
 tools:
   - name: image-create
     source:
@@ -214,6 +223,85 @@ tools:
         install:
           - args: ['make', 'install-target-libstdc++-v3']
 
+  - name: system-gcc
+    from_source: gcc
+    tools_required:
+      - tool: cross-binutils
+        recursive: true
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+        - '--target=x86_64-sigma-system'
+        - '--with-sysroot=@SYSROOT_DIR@'
+        - '--enable-languages=c,c++'
+        - '--disable-multilib'
+        - '--enable-initfini-array'
+        # -g blows up GCC's binary size.
+        - 'CFLAGS=-O2'
+        - 'CXXFLAGS=-O2'
+    stages:
+      - name: compiler
+        pkgs_required:
+         - mlibc-headers
+        compile:
+          # GCC complains if the include directory is non-existant.
+          - args: ['mkdir', '-p', '@SYSROOT_DIR@/usr/include']
+          - args: ['make', '-j@PARALLELISM@', 'all-gcc']
+        install:
+          - args: ['make', 'install-gcc']
+          # GCC does *not* look for target-prefixed LD/AS.
+          # Instead, it searches a list of prefix directories. Link AS/LD to make it happy.
+          - args: ['mkdir', '-p', '@PREFIX@/x86_64-sigma/bin']
+          - args: ['ln', '-sf', '../../../cross-binutils/x86_64-sigma/bin/as',
+                               '@PREFIX@/x86_64-sigma/bin/as']
+          - args: ['ln', '-sf', '../../../cross-binutils/x86_64-sigma/bin/ld',
+                               '@PREFIX@/x86_64-sigma/bin/ld']
+      - name: libgcc
+        tools_required:
+          - tool: system-gcc
+            stage_dependencies: [compiler]
+        pkgs_required:
+         - mlibc
+        compile:
+          - args: ['make', '-j@PARALLELISM@', 'all-target-libgcc']
+        install:
+          - args: ['make', 'install-target-libgcc']
+      - name: libstdc++
+        tools_required:
+          - tool: system-gcc
+            stage_dependencies: [libgcc]
+        compile:
+          - args: ['make', '-j@PARALLELISM@', 'all-target-libstdc++-v3']
+        install:
+          - args: ['make', 'install-target-libstdc++-v3']
+  # We could run an external pkg-config; however, we need the aclocal files.
+  # The easiest way to ensure that they are available is to just install pkg-config.
+  - name: host-pkg-config
+    exports_aclocal: true
+    source:
+      name: 'pkg-config'
+      subdir: 'ports'
+      git: 'https://gitlab.freedesktop.org/pkg-config/pkg-config.git'
+      tag: 'pkg-config-0.29.2'
+      tools_required:
+        - host-autoconf-v2.69
+        - host-automake-v1.11
+        - host-libtool
+      regenerate:
+        - args: ['./autogen.sh']
+          environ:
+            'NOCONFIGURE': 'yes'
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--prefix=@PREFIX@'
+        - '--with-internal-glib'
+    compile:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'install']
+
 packages:
   - name: sigma-kernel
     from_source: sigma-src
@@ -226,24 +314,6 @@ packages:
         - '@THIS_SOURCE_DIR@'
         - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
         - '--prefix=/usr/sigma'
-        - '--libdir=lib'
-    build:
-      - args: ['ninja']
-      - args: ['ninja', 'install']
-        environ:
-          DESTDIR: '@THIS_COLLECT_DIR@'
-
-  - name: libsigma
-    from_source: sigma-src
-    tools_required:
-      - tool: kernel-gcc
-        recursive: true
-    configure:
-      - args:
-        - 'meson'
-        - '@THIS_SOURCE_DIR@/libs/libsigma'
-        - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
-        - '--prefix=/usr'
         - '--libdir=lib'
     build:
       - args: ['ninja']
@@ -269,10 +339,95 @@ packages:
     pkgs_required:
       - sigma-kernel
       - sigma-initrd
-      - libsigma
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
-      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/hdd.bin', '1GiB', 'ext2', 'gpt', '@BUILD_ROOT@/system-root']
-    
-  
+      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/hdd.bin', '128MiB', 'ext2', 'gpt', '@BUILD_ROOT@/system-root']
+
+  - name: libsigma-headers
+    from_source: sigma-src
+    implict_package: true
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/libs/libsigma'
+        #- '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+        - '-Dheaders_only=true'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+
+  - name: libsigma
+    from_source: sigma-src
+    implict_package: true
+    tools_required:
+      - tool: system-gcc
+        stage_dependencies: [compiler]
+    pkgs_required:
+      - libsigma-headers
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/libs/libsigma'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+        - '-Dmlibc_no_headers=true'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+
+  - name: mlibc-headers
+    from_source: mlibc
+    pkgs_required:
+      - libsigma-headers
+    implict_package: true
+    configure:
+      - args:
+        - 'meson'
+        #- '--cross-file'
+        #- '@SOURCE_ROOT@/misc/sigma.cross-file'
+        - '--prefix=/usr'
+        - '@THIS_SOURCE_DIR@'
+        - '-Dheaders_only=true'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: mlibc
+    from_source: mlibc
+    tools_required:
+      - tool: system-gcc
+        stage_dependencies: [compiler]
+      - host-pkg-config
+    implict_package: true
+    pkgs_required:
+      - libsigma
+      - mlibc-headers
+    configure:
+      - args:
+        - 'meson'
+        - '--cross-file'
+        - '@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+        - '--buildtype=debugoptimized'
+        - '-Dmlibc_no_headers=true'
+        - '@THIS_SOURCE_DIR@'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+        quiet: true
+      - args: ['ln', '-sf', 'crt0.o', '@THIS_COLLECT_DIR@/usr/lib/crt1.o']
