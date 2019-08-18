@@ -1,2 +1,1 @@
 target remote localhost:1234
-symbol-file system-root/usr/sigma/bin/sigma.bin
