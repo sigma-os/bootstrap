@@ -323,20 +323,26 @@ packages:
     
   - name: sigma-initrd
     from_source: sigma-src
+    tools_required:
+      - tool: system-gcc
+        recursive: true
     pkgs_required:
       - sigma-kernel
     configure: []
     build:
-      - args: ['./initrd/build.sh']
-        workdir: '@THIS_SOURCE_DIR@'
-      - args: ['mv', './initrd.tar', '@BUILD_ROOT@/system-root/usr/sigma/bin/initrd.tar']
-        workdir: '@THIS_SOURCE_DIR@'
+      - args: ['make']
+        workdir: '@THIS_SOURCE_DIR@/initrd/test'
+      - args: ['make']
+        workdir: '@THIS_SOURCE_DIR@/initrd/ctest'
+      - args: ['@SOURCE_ROOT@/scripts/prepare_initrd.sh']
+        workdir: '@BUILD_ROOT@'
 
   - name: sigma-system
     from_source: sigma-src
     tools_required:
       - image-create
-      - system-gcc
+      - tool: system-gcc
+        recursive: true
     pkgs_required:
       - sigma-kernel
       - sigma-initrd

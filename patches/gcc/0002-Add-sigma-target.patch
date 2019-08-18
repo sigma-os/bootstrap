@@ -174,9 +174,9 @@ index 000000000..d0ea03716
 +#define GNU_USER_LINK_EMULATION64 "elf_x86_64"
 +#define GNU_USER_LINK_EMULATIONX32 "elf32_x86_64"
 +
-+#define GNU_USER_DYNAMIC_LINKER32 "/lib/i386-sigma/rtdl.so"
-+#define GNU_USER_DYNAMIC_LINKER64 "/lib/x86_64-sigma/rtdl.so"
-+#define GNU_USER_DYNAMIC_LINKERX32 "/lib/x86_64-sigma-x32/rtdl.so"
++#define GNU_USER_DYNAMIC_LINKER32 "/usr/lib32/ld.so"
++#define GNU_USER_DYNAMIC_LINKER64 "/usr/lib/ld.so"
++#define GNU_USER_DYNAMIC_LINKERX32 "/usr/libx32/ld.so"
 +
 +#undef TARGET_OS_CPP_BUILTINS
 +#define TARGET_OS_CPP_BUILTINS() \
