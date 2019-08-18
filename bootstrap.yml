@@ -41,7 +41,7 @@ sources:
 
   - name: mlibc
     subdir: 'src'
-    git: 'http://github.com/managarm/mlibc.git'
+    git: 'http://github.com/sigma-os/mlibc.git'
     branch: 'master'
     sources_required:
       - sigma-src
