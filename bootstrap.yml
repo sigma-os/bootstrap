@@ -346,6 +346,7 @@ packages:
     pkgs_required:
       - sigma-kernel
       - sigma-initrd
+      - zeta
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
@@ -438,3 +439,20 @@ packages:
           DESTDIR: '@THIS_COLLECT_DIR@'
         quiet: true
       - args: ['ln', '-sf', 'crt0.o', '@THIS_COLLECT_DIR@/usr/lib/crt1.o']
+
+  - name: zeta
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/zeta'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
