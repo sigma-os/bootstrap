@@ -350,7 +350,7 @@ packages:
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
-      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/hdd.bin', '128MiB', 'ext2', 'gpt', '@BUILD_ROOT@/system-root']
+      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/sigma.hdd', '128MiB', 'ext2', 'dos', '@BUILD_ROOT@/system-root']
 
   - name: libsigma-headers
     from_source: sigma-src
