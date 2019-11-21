@@ -9,14 +9,10 @@ speaker: enabled=1, mode=system
 vga: update_freq=30
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
-com1: enabled=1, mode=file, dev=kernel/build/log/com1.log
-com2: enabled=1, mode=file, dev=kernel/build/log/com2.log
-com3: enabled=1, mode=file, dev=kernel/build/log/com3.log
-com4: enabled=1, mode=file, dev=kernel/build/log/com4.log
-
+com1: enabled=1, mode=file, dev=/home/thomas/Desktop/bochs_serial_out.txt
 
 clock: sync=realtime
 cpu: model=corei7_haswell_4770, ips=1000000, count=4, reset_on_triple_fault=0
 megs: 2048
 
-ata0-master: type=disk, path=hdd.bin
+ata0-master: type=disk, path=sigma.hdd

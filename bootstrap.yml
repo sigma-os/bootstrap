@@ -311,7 +311,7 @@ packages:
     configure:
       - args:
         - 'meson'
-        - '@THIS_SOURCE_DIR@'
+        - '@THIS_SOURCE_DIR@/kernel'
         - '--cross-file=@SOURCE_ROOT@/misc/sigma-kernel.cross.ini'
         - '--prefix=/usr/sigma'
         - '--libdir=lib'
