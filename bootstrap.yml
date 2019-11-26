@@ -328,6 +328,8 @@ packages:
         recursive: true
     pkgs_required:
       - sigma-kernel
+      - zeta
+      - ata
     configure: []
     build:
       - args: ['make']
@@ -347,10 +349,11 @@ packages:
       - sigma-kernel
       - sigma-initrd
       - zeta
+      - ata
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
-      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/sigma.hdd', '128MiB', 'ext2', 'dos', '@BUILD_ROOT@/system-root']
+      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/sigma.hdd', '48MiB', 'ext2', 'dos', '@BUILD_ROOT@/system-root']
 
   - name: libsigma-headers
     from_source: sigma-src
@@ -448,6 +451,23 @@ packages:
       - args:
         - 'meson'
         - '@THIS_SOURCE_DIR@/zeta'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: ata
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/drivers/ata'
         - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
         - '--prefix=/usr'
         - '--libdir=lib'
