@@ -329,7 +329,7 @@ packages:
     pkgs_required:
       - sigma-kernel
       - zeta
-      - ata
+      - ahci
     configure: []
     build:
       - args: ['make']
@@ -349,7 +349,7 @@ packages:
       - sigma-kernel
       - sigma-initrd
       - zeta
-      - ata
+      - ahci
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
@@ -468,6 +468,23 @@ packages:
       - args:
         - 'meson'
         - '@THIS_SOURCE_DIR@/drivers/ata'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: ahci
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/drivers/ahci'
         - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
         - '--prefix=/usr'
         - '--libdir=lib'
