@@ -333,8 +333,6 @@ packages:
     configure: []
     build:
       - args: ['make']
-        workdir: '@THIS_SOURCE_DIR@/initrd/test'
-      - args: ['make']
         workdir: '@THIS_SOURCE_DIR@/initrd/ctest'
       - args: ['@SOURCE_ROOT@/scripts/prepare_initrd.sh']
         workdir: '@BUILD_ROOT@'
