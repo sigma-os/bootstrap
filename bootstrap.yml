@@ -386,7 +386,7 @@ packages:
         - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
         - '--prefix=/usr'
         - '--libdir=lib'
-        - '-Dmlibc_no_headers=true'
+        - '-Dno_headers=true'
     build:
       - args: ['ninja']
       - args: ['ninja', 'install']
