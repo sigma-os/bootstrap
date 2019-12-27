@@ -317,6 +317,40 @@ tools:
 
 
 packages:
+  - name: zeta
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/zeta'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: sigma-drivers
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/drivers'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
   - name: sigma-kernel
     from_source: sigma-src
     tools_required:
@@ -343,7 +377,7 @@ packages:
     pkgs_required:
       - sigma-kernel
       - zeta
-      - ahci
+      - sigma-drivers
     configure: []
     build:
       - args: ['make']
@@ -360,8 +394,7 @@ packages:
     pkgs_required:
       - sigma-kernel
       - sigma-initrd
-      - zeta
-      - ahci
+      - sigma-drivers
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
@@ -384,7 +417,6 @@ packages:
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
 
-
   - name: libsigma
     from_source: sigma-src
     implict_package: true
@@ -406,7 +438,6 @@ packages:
       - args: ['ninja', 'install']
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
-
 
   - name: mlibc-headers
     from_source: mlibc
@@ -454,54 +485,3 @@ packages:
           DESTDIR: '@THIS_COLLECT_DIR@'
         quiet: true
       - args: ['ln', '-sf', 'crt0.o', '@THIS_COLLECT_DIR@/usr/lib/crt1.o']
-
-  - name: zeta
-    from_source: sigma-src
-    tools_required:
-      - system-gcc
-    configure:
-      - args:
-        - 'meson'
-        - '@THIS_SOURCE_DIR@/zeta'
-        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
-        - '--prefix=/usr'
-        - '--libdir=lib'
-    build:
-      - args: ['ninja']
-      - args: ['ninja', 'install']
-        environ:
-          DESTDIR: '@THIS_COLLECT_DIR@'
-
-  - name: ata
-    from_source: sigma-src
-    tools_required:
-      - system-gcc
-    configure:
-      - args:
-        - 'meson'
-        - '@THIS_SOURCE_DIR@/drivers/ata'
-        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
-        - '--prefix=/usr'
-        - '--libdir=lib'
-    build:
-      - args: ['ninja']
-      - args: ['ninja', 'install']
-        environ:
-          DESTDIR: '@THIS_COLLECT_DIR@'
-
-  - name: ahci
-    from_source: sigma-src
-    tools_required:
-      - system-gcc
-    configure:
-      - args:
-        - 'meson'
-        - '@THIS_SOURCE_DIR@/drivers/ahci'
-        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
-        - '--prefix=/usr'
-        - '--libdir=lib'
-    build:
-      - args: ['ninja']
-      - args: ['ninja', 'install']
-        environ:
-          DESTDIR: '@THIS_COLLECT_DIR@'
