@@ -302,6 +302,20 @@ tools:
     install:
       - args: ['make', 'install']
 
+  - name: flatbuffer
+    source:
+      name: 'flatbuffer-src'
+      subdir: 'ports'
+      git: 'https://github.com/google/flatbuffers.git'
+      branch: 'master'
+    configure:
+      - args: ['cmake', '@THIS_SOURCE_DIR@', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=@PREFIX@']
+    compile:
+      - args: ['ninja']
+    install:
+      - args: ['ninja', 'install']
+
+
 packages:
   - name: sigma-kernel
     from_source: sigma-src

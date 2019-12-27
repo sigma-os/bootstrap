@@ -2,7 +2,7 @@
 
 To bootstrap Sigma OS follow these steps:
 
-Required tools `git` `xbstrap` `meson` `nasm` `sudo`
+Required tools `git` `xbstrap` `meson` `nasm` `sudo` `make` `cmake` `ninja`
 
 1. Clone this repo into ./src `git clone https://www.github.com/sigma-os/bootstrap ./src`
 2. Create a build dir and go to it `mkdir ./build && cd ./build`
