@@ -57,6 +57,14 @@ tools:
     configure:
     - args: ['chmod', '+x', '@THIS_SOURCE_DIR@/image_create.sh']
 
+  - name: iota
+    source:
+      subdir: 'ports'
+      git: 'https://github.com/sigma-os/iota'
+      branch: 'master'
+    configure:
+    - args: ['chmod', '+x', '@THIS_SOURCE_DIR@/iota.py']
+
   - name: host-autoconf-v2.69
     source:
       name: autoconf-v2.69
@@ -337,6 +345,17 @@ packages:
       - args: ['ninja', 'install']
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: sigma-protocols
+    from_source: sigma-src
+    tools_required:
+      - iota
+    build:
+      - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/usr/include/protocols']
+      - args: ['./build.sh', 'zeta.xml', '@BUILD_ROOT@/system-root/usr/include/protocols/zeta-std.hpp', 'std', '@SOURCE_ROOT@/ports/iota']
+        workdir: '@THIS_SOURCE_DIR@/protocol'
+      - args: ['./build.sh', 'zeta.xml', '@BUILD_ROOT@/system-root/usr/include/protocols/zeta-frigg.hpp', 'frigg', '@SOURCE_ROOT@/ports/iota']
+        workdir: '@THIS_SOURCE_DIR@/protocol'
 
   - name: sigma-kernel
     from_source: sigma-src
