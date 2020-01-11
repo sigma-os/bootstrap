@@ -10,7 +10,7 @@ Required tools `git` `xbstrap` `meson` `nasm` `sudo` `make` `cmake` `ninja`
 4. Compile and install everything (warning: on first run this step may take a *long* time) `xbstrap install --all`
    
    Alternatively it should be enough to call `xbstrap install --reconfigure sigma-system`, this should still take a long time though
-5. Launch QEMU with `../src/scripts/run_qemu.sh` or write hdd.bin to a disk or USB stick
+5. Launch QEMU with `../src/scripts/run_qemu.sh` or write sigma.hdd to a disk or USB stick
 
 Notes:
 - Large parts of bootstrap.yml and patches were taken from [managarm/bootstrap-managarm](https://github.com/managarm/bootstrap-managarm)
