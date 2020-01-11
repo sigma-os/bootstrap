@@ -316,6 +316,8 @@ packages:
     from_source: sigma-src
     tools_required:
       - system-gcc
+    pkgs_required:
+      - sigma-protocols
     configure:
       - args:
         - 'meson'
@@ -348,6 +350,7 @@ packages:
 
   - name: sigma-protocols
     from_source: sigma-src
+    implict_package: true
     tools_required:
       - iota
     build:
@@ -474,11 +477,11 @@ packages:
     pkgs_required:
       - libsigma
       - mlibc-headers
+      - sigma-protocols
     configure:
       - args:
         - 'meson'
-        - '--cross-file'
-        - '@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
         - '--prefix=/usr'
         - '--libdir=lib'
         - '--buildtype=debugoptimized'
