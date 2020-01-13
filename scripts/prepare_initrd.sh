@@ -8,7 +8,6 @@ install -s system-root/usr/lib/libm.so initrd/usr/lib/
 install -s tools/system-gcc/x86_64-sigma/lib64/libgcc_s.so.1 initrd/usr/lib/
 install -s tools/system-gcc/x86_64-sigma/lib64/libstdc++.so.6 initrd/usr/lib/
 
-install -s ../src/src/sigma-src/initrd/ctest/ctest initrd/usr/bin/
 install -s system-root/usr/bin/zeta initrd/usr/bin/
 install -s system-root/usr/bin/ahci initrd/usr/bin/
 install -s system-root/usr/bin/nvme initrd/usr/bin/
