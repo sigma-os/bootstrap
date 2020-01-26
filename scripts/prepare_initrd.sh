@@ -12,6 +12,7 @@ install -s system-root/usr/bin/zeta initrd/usr/bin/
 install -s system-root/usr/bin/ahci initrd/usr/bin/
 install -s system-root/usr/bin/nvme initrd/usr/bin/
 install -s system-root/usr/bin/vbe initrd/usr/bin/
+install -s system-root/usr/bin/bga initrd/usr/bin/
 
 rm -f ./system-root/usr/sigma/bin/initrd.tar
 
