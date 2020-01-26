@@ -10,9 +10,9 @@ QEMU_KVM="-enable-kvm -cpu host"
 QEMU_SMP="-smp $SIGMA_N_CPUS"
 QEMU_MACHINE="-machine q35"
 
-QEMU_DEBUG="-monitor stdio -serial file:/dev/stdout -no-shutdown --no-reboot"
-QEMU_TRACE="-trace nvme_*"
+QEMU_DEBUG="-monitor stdio -serial file:/dev/stdout -no-shutdown -no-reboot -d int"
+QEMU_TRACE="-trace amdvi_*"
 
-QEMU_ARGS="$QEMU_KVM $QEMU_SMP $QEMU_MACHINE $QEMU_DEBUG $QEMU_HDD_NVME"
+QEMU_ARGS="$QEMU_KVM $QEMU_SMP $QEMU_MACHINE $QEMU_DEBUG $QEMU_HDD_NVME $1"
 
 qemu-system-x86_64 $QEMU_ARGS | c++filt

@@ -1,1 +1,4 @@
 target remote localhost:1234
+
+set disassemble-next-line on
+set disassembly-flavor intel
