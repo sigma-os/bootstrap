@@ -8,7 +8,7 @@ QEMU_HDD_NVME="-drive file=$SIGMA_IMAGE,if=none,id=nvmedisk0 -device nvme,drive=
 
 QEMU_KVM="-enable-kvm -cpu host"
 QEMU_SMP="-smp $SIGMA_N_CPUS"
-QEMU_MACHINE="-machine q35"
+QEMU_MACHINE="-machine q35 -device intel-iommu,aw-bits=48"
 
 QEMU_GPU="-vga std"
 
