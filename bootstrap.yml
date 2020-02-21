@@ -318,6 +318,7 @@ packages:
       - system-gcc
     pkgs_required:
       - sigma-protocols
+      - libsigma
     configure:
       - args:
         - 'meson'
@@ -331,10 +332,52 @@ packages:
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
 
+  - name: kbus-server
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    pkgs_required:
+      - sigma-protocols
+      - libsigma
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/kbus'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+  - name: kbus-lib
+    from_source: sigma-src
+    tools_required:
+      - system-gcc
+    pkgs_required:
+      - sigma-protocols
+      - libsigma
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@/libs/libkbus'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
   - name: sigma-drivers
     from_source: sigma-src
     tools_required:
       - system-gcc
+    pkgs_required:
+      - kbus-lib
     configure:
       - args:
         - 'meson'
@@ -358,6 +401,8 @@ packages:
       - args: ['./build.sh', 'zeta.xml', '@BUILD_ROOT@/system-root/usr/include/protocols/zeta-std.hpp', 'std', '@SOURCE_ROOT@/ports/iota']
         workdir: '@THIS_SOURCE_DIR@/protocol'
       - args: ['./build.sh', 'zeta.xml', '@BUILD_ROOT@/system-root/usr/include/protocols/zeta-frigg.hpp', 'frigg', '@SOURCE_ROOT@/ports/iota']
+        workdir: '@THIS_SOURCE_DIR@/protocol'
+      - args: ['./build.sh', 'kbus.xml', '@BUILD_ROOT@/system-root/usr/include/protocols/kbus.hpp', 'std', '@SOURCE_ROOT@/ports/iota']
         workdir: '@THIS_SOURCE_DIR@/protocol'
 
   - name: sigma-kernel
@@ -386,6 +431,7 @@ packages:
     pkgs_required:
       - sigma-kernel
       - zeta
+      - kbus-server
       - sigma-drivers
     configure: []
     build:
@@ -454,8 +500,7 @@ packages:
     configure:
       - args:
         - 'meson'
-        #- '--cross-file'
-        #- '@SOURCE_ROOT@/misc/sigma.cross-file'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
         - '--prefix=/usr'
         - '@THIS_SOURCE_DIR@'
         - '-Dheaders_only=true'
