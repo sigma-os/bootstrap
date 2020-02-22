@@ -353,6 +353,9 @@ tools:
       - args: ['ninja']
     install:
       - args: ['ninja', 'install']
+      - args: |
+          sed -e 's|_BUILD_ROOT_|@BUILD_ROOT@|' @SOURCE_ROOT@/misc/sigma-clang.cross.template.ini \
+              >  @SOURCE_ROOT@/misc/sigma-clang.cross.ini
 
 
 

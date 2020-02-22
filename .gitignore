@@ -5,3 +5,5 @@ binutils-build/
 
 ports/
 src/
+
+misc/sigma-clang.cross.ini
