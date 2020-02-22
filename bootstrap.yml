@@ -1,4 +1,9 @@
 sources:
+  - name: llvm
+    subdir: 'ports'
+    git: 'https://github.com/llvm/llvm-project'
+    tag: 'llvmorg-9.0.1'
+
   - name: binutils
     subdir: 'ports'
     git: 'git://sourceware.org/git/binutils-gdb.git'
@@ -309,6 +314,47 @@ tools:
       - args: ['make', '-j@PARALLELISM@']
     install:
       - args: ['make', 'install']
+
+  - name: host-cmake
+    source:
+      name: 'cmake'
+      subdir: 'ports'
+      git: 'https://gitlab.kitware.com/cmake/cmake.git'
+      tag: 'v3.14.5'
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/bootstrap'
+        - '--prefix=@PREFIX@'
+        - '--parallel=@PARALLELISM@'
+    compile:
+      - args: ['make', '-j@PARALLELISM@']
+    install:
+      - args: ['make', 'install']
+      - args: ['ln', '-sf', '@SOURCE_ROOT@/misc/sigma.cmake', '@PREFIX@/share/cmake-3.14/Modules/Platform/']
+
+
+  - name: host-llvm-toolchain
+    from_source: llvm
+    tools_required:
+      - host-cmake
+      - system-gcc
+    configure:
+      - args:
+        - 'cmake'
+        - '-GNinja'
+        - '-DCMAKE_INSTALL_PREFIX=@PREFIX@'
+        - '-DCMAKE_BUILD_TYPE=Release'
+        - '-DLLVM_TARGETS_TO_BUILD=X86'
+        - '-DLLVM_ENABLE_PROJECTS=clang'
+        
+        - '-DDEFAULT_SYSROOT=@SYSROOT_DIR@'
+        - '@THIS_SOURCE_DIR@/llvm'
+    compile:
+      - args: ['ninja']
+    install:
+      - args: ['ninja', 'install']
+
+
 
 
 packages:

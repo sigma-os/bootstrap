@@ -1,0 +1,162 @@
+From 1f7d47e464ecfb129a624111a0a6db60021525b9 Mon Sep 17 00:00:00 2001
+From: Thomas Woertman <twoertman@gmail.com>
+Date: Sat, 22 Feb 2020 14:03:19 +0100
+Subject: [PATCH 1/2] Add sigma specific changes
+
+---
+ llvm/cmake/modules/CrossCompile.cmake    | 4 ++--
+ llvm/include/llvm/Support/Host.h         | 2 +-
+ llvm/lib/Support/NativeFormatting.cpp    | 2 ++
+ llvm/lib/Support/Triple.cpp              | 6 ++++++
+ llvm/lib/Support/Unix/Path.inc           | 6 +++---
+ llvm/lib/Support/Unix/Program.inc        | 1 +
+ llvm/tools/llvm-dwarfdump/Statistics.cpp | 1 +
+ llvm/tools/llvm-shlib/CMakeLists.txt     | 1 +
+ 8 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/llvm/cmake/modules/CrossCompile.cmake b/llvm/cmake/modules/CrossCompile.cmake
+index d6b416131..9f5e12a66 100644
+--- a/llvm/cmake/modules/CrossCompile.cmake
++++ b/llvm/cmake/modules/CrossCompile.cmake
+@@ -13,8 +13,8 @@ function(llvm_create_cross_target_internal target_name toolchain buildtype)
+       -DCMAKE_TOOLCHAIN_FILE=\"${LLVM_MAIN_SRC_DIR}/cmake/platforms/${toolchain}.cmake\")
+   else()
+     set(CROSS_TOOLCHAIN_FLAGS_INIT
+-      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+-      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
++      -DCMAKE_C_COMPILER=gcc
++      -DCMAKE_CXX_COMPILER=g++
+       )
+   endif()
+   set(CROSS_TOOLCHAIN_FLAGS_${target_name} ${CROSS_TOOLCHAIN_FLAGS_INIT}
+diff --git a/llvm/include/llvm/Support/Host.h b/llvm/include/llvm/Support/Host.h
+index b37cc514c..6cbec78b7 100644
+--- a/llvm/include/llvm/Support/Host.h
++++ b/llvm/include/llvm/Support/Host.h
+@@ -15,7 +15,7 @@
+ 
+ #include "llvm/ADT/StringMap.h"
+ 
+-#if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__)
++#if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__) || defined(__sigma__)
+ #include <endian.h>
+ #elif defined(_AIX)
+ #include <sys/machine.h>
+diff --git a/llvm/lib/Support/NativeFormatting.cpp b/llvm/lib/Support/NativeFormatting.cpp
+index 3731e0c56..f1cd3b791 100644
+--- a/llvm/lib/Support/NativeFormatting.cpp
++++ b/llvm/lib/Support/NativeFormatting.cpp
+@@ -15,6 +15,8 @@
+ 
+ #include <float.h>
+ 
++#include <cmath>
++
+ using namespace llvm;
+ 
+ template<typename T, std::size_t N>
+diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
+index d419463e6..38536d07d 100644
+--- a/llvm/lib/Support/Triple.cpp
++++ b/llvm/lib/Support/Triple.cpp
+@@ -185,6 +185,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+   case IOS: return "ios";
+   case KFreeBSD: return "kfreebsd";
+   case Linux: return "linux";
++  case Sigma: return "sigma";
+   case Lv2: return "lv2";
+   case MacOSX: return "macosx";
+   case NetBSD: return "netbsd";
+@@ -240,6 +241,8 @@ StringRef Triple::getEnvironmentTypeName(EnvironmentType Kind) {
+   case CoreCLR: return "coreclr";
+   case Simulator: return "simulator";
+   case MacABI: return "macabi";
++  case Kernel: return "kernel";
++  case System: return "system";
+   }
+ 
+   llvm_unreachable("Invalid EnvironmentType!");
+@@ -490,6 +493,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+     .StartsWith("ios", Triple::IOS)
+     .StartsWith("kfreebsd", Triple::KFreeBSD)
+     .StartsWith("linux", Triple::Linux)
++    .StartsWith("sigma", Triple::Sigma)
+     .StartsWith("lv2", Triple::Lv2)
+     .StartsWith("macos", Triple::MacOSX)
+     .StartsWith("netbsd", Triple::NetBSD)
+@@ -543,6 +547,8 @@ static Triple::EnvironmentType parseEnvironment(StringRef EnvironmentName) {
+     .StartsWith("coreclr", Triple::CoreCLR)
+     .StartsWith("simulator", Triple::Simulator)
+     .StartsWith("macabi", Triple::MacABI)
++    .StartsWith("kernel", Triple::Kernel)
++    .StartsWith("system", Triple::System)
+     .Default(Triple::UnknownEnvironment);
+ }
+ 
+diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
+index 27c8a1bc9..4b962d135 100644
+--- a/llvm/lib/Support/Unix/Path.inc
++++ b/llvm/lib/Support/Unix/Path.inc
+@@ -56,7 +56,7 @@
+ 
+ #include <sys/types.h>
+ #if !defined(__APPLE__) && !defined(__OpenBSD__) && !defined(__FreeBSD__) &&   \
+-    !defined(__linux__) && !defined(__FreeBSD_kernel__) && !defined(_AIX)
++    !defined(__linux__) && !defined(__FreeBSD_kernel__) && !defined(_AIX) && !defined(__sigma__)
+ #include <sys/statvfs.h>
+ #define STATVFS statvfs
+ #define FSTATVFS fstatvfs
+@@ -65,7 +65,7 @@
+ #if defined(__OpenBSD__) || defined(__FreeBSD__)
+ #include <sys/mount.h>
+ #include <sys/param.h>
+-#elif defined(__linux__)
++#elif defined(__linux__) || defined(__sigma__)
+ #if defined(HAVE_LINUX_MAGIC_H)
+ #include <linux/magic.h>
+ #else
+@@ -396,7 +396,7 @@ std::error_code remove(const Twine &path, bool IgnoreNonExisting) {
+ }
+ 
+ static bool is_local_impl(struct STATVFS &Vfs) {
+-#if defined(__linux__) || defined(__GNU__)
++#if defined(__linux__) || defined(__GNU__) || defined(__sigma__)
+ #ifndef NFS_SUPER_MAGIC
+ #define NFS_SUPER_MAGIC 0x6969
+ #endif
+diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
+index c4123a640..d8f126f2c 100644
+--- a/llvm/lib/Support/Unix/Program.inc
++++ b/llvm/lib/Support/Unix/Program.inc
+@@ -39,6 +39,7 @@
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
++#undef HAVE_POSIX_SPAWN
+ #ifdef HAVE_POSIX_SPAWN
+ #include <spawn.h>
+ 
+diff --git a/llvm/tools/llvm-dwarfdump/Statistics.cpp b/llvm/tools/llvm-dwarfdump/Statistics.cpp
+index f26369b93..371a6aeee 100644
+--- a/llvm/tools/llvm-dwarfdump/Statistics.cpp
++++ b/llvm/tools/llvm-dwarfdump/Statistics.cpp
+@@ -1,3 +1,4 @@
++#include <cmath>
+ #include "llvm/ADT/DenseMap.h"
+ #include "llvm/ADT/StringExtras.h"
+ #include "llvm/ADT/StringSet.h"
+diff --git a/llvm/tools/llvm-shlib/CMakeLists.txt b/llvm/tools/llvm-shlib/CMakeLists.txt
+index 901f55c99..6764c3d29 100644
+--- a/llvm/tools/llvm-shlib/CMakeLists.txt
++++ b/llvm/tools/llvm-shlib/CMakeLists.txt
+@@ -48,6 +48,7 @@ if(LLVM_BUILD_LLVM_DYLIB)
+   if(("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux") OR (MINGW) OR (HAIKU)
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "GNU")
++     OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "sigma")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "OpenBSD")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "Fuchsia")
+      OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "DragonFly")
+-- 
+2.20.1
+
