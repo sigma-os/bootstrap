@@ -395,6 +395,27 @@ packages:
       - args: ['mkdir', '-p', '@THIS_COLLECT_DIR@/usr/include']
       - args: ['cp', '-r', '--dereference', '@THIS_SOURCE_DIR@/boost', '@THIS_COLLECT_DIR@/usr/include']
 
+  - name: libasync
+    source:
+      subdir: 'ports'
+      git: 'https://github.com/managarm/libasync.git'
+      branch: 'master'
+    tools_required:
+      - system-gcc
+    pkgs_required:
+      - boost
+    configure: []
+    build:
+      - args: ['make', '-f', '@THIS_SOURCE_DIR@/library.makefile', 'install']
+        environ:
+          S: '@THIS_SOURCE_DIR@'
+          DESTDIR: '@THIS_COLLECT_DIR@'
+          prefix: '/usr/'
+          CXX: 'x86_64-sigma-g++'
+          LD: 'x86_64-sigma-ld'
+          AS: 'x86_64-sigma-as'
+
+
   - name: zeta
     from_source: sigma-src
     tools_required:
@@ -534,7 +555,7 @@ packages:
     configure:
       - args: ['mkdir', '-p', '@BUILD_ROOT@/system-root/boot/grub']
       - args: ['cp', '@SOURCE_ROOT@/misc/grub.cfg', '@BUILD_ROOT@/system-root/boot/grub/grub.cfg']
-      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/sigma.hdd', '48MiB', 'ext2', 'dos', '@BUILD_ROOT@/system-root']
+      - args: ['@SOURCE_ROOT@/ports/image-create/image_create.sh', '@BUILD_ROOT@/sigma.hdd', '48MiB', 'ext2', 'gpt', '@BUILD_ROOT@/system-root']
 
   - name: libsigma-headers
     from_source: sigma-src
