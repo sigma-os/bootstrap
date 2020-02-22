@@ -312,6 +312,25 @@ tools:
 
 
 packages:
+  - name: zlib
+    source:
+      subdir: 'ports'
+      git: 'https://github.com/madler/zlib.git'
+      tag: 'v1.2.11'
+    tools_required:
+      - system-gcc
+    configure:
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        environ:
+          CHOST: 'x86_64-sigma'
+          prefix: '/usr'
+    build:
+      - args: ['make', '-j@PARALLELISM@']
+      - args: ['make', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
   - name: zeta
     from_source: sigma-src
     tools_required:
