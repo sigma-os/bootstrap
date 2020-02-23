@@ -432,6 +432,7 @@ packages:
   - name: zeta
     from_source: sigma-src
     tools_required:
+      - host-llvm-toolchain
       - system-gcc
     pkgs_required:
       - sigma-protocols
@@ -440,7 +441,7 @@ packages:
       - args:
         - 'meson'
         - '@THIS_SOURCE_DIR@/zeta'
-        - '--cross-file=@SOURCE_ROOT@/misc/sigma.cross.ini'
+        - '--cross-file=@SOURCE_ROOT@/misc/sigma-clang.cross.ini'
         - '--prefix=/usr'
         - '--libdir=lib'
     build:
