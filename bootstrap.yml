@@ -528,6 +528,7 @@ packages:
     tools_required:
       - tool: kernel-gcc
         recursive: true
+      - tool: iota
     configure:
       - args:
         - 'meson'
@@ -536,6 +537,8 @@ packages:
         - '--prefix=/usr/sigma'
         - '--libdir=lib'
     build:
+      - args: ['./build.sh', 'zeta.xml', '@THIS_SOURCE_DIR@/kernel/include/protocols/zeta-sigma-kernel.hpp', 'sigma-kernel', '@SOURCE_ROOT@/ports/iota']
+        workdir: '@THIS_SOURCE_DIR@/protocol'
       - args: ['ninja']
       - args: ['ninja', 'install']
         environ:
