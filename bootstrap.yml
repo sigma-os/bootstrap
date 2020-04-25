@@ -412,6 +412,7 @@ packages:
       subdir: 'ports'
       git: 'https://github.com/managarm/libasync.git'
       branch: 'master'
+      commit: 42a917fc8650e8aa5dd5436ad552714ce9dab6d7
     tools_required:
       - system-gcc
     pkgs_required:
