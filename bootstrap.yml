@@ -18,7 +18,7 @@ sources:
   - name: gcc
     subdir: 'ports'
     git: 'git://gcc.gnu.org/git/gcc.git'
-    tag: 'gcc-9_2_0-release'
+    tag: 'releases/gcc-9.2.0'
     tools_required:
       - host-autoconf-v2.69
       - host-automake-v1.11
@@ -36,13 +36,13 @@ sources:
     git: 'git://www.github.com/sigma-os/sigma'
     branch: 'master'
     disable_shallow_fetch: true
-    regenerate:
-      - args: ['git', 'remote', 'add', 'origin', 'https://github.com/sigma-os/Sigma.git']
-        workdir: '@THIS_SOURCE_DIR@'
-      - args: ['git', 'checkout', 'master']
-        workdir: '@THIS_SOURCE_DIR@'
-      - args: ['git', 'submodule', 'update', '--init', '--recursive']
-        workdir: '@THIS_SOURCE_DIR@'
+    #regenerate:
+      #- args: ['git', 'remote', 'add', 'origin', 'https://github.com/sigma-os/Sigma.git']
+      #  workdir: '@THIS_SOURCE_DIR@'
+      #- args: ['git', 'checkout', 'master']
+      #  workdir: '@THIS_SOURCE_DIR@'
+      #- args: ['git', 'submodule', 'update', '--init', '--recursive']
+      #  workdir: '@THIS_SOURCE_DIR@'
 
   - name: mlibc
     subdir: 'src'
@@ -407,6 +407,24 @@ packages:
       - args: ['mkdir', '-p', '@SYSROOT_DIR@/usr/include/experimental/']
       - args: ['cp', '@THIS_SOURCE_DIR@/clang-coroutine/include/experimental/coroutine', '@SYSROOT_DIR@/usr/include/experimental/']
 
+  - name: frigg
+    source:
+      subdir: 'ports'
+      git: 'https://github.com/managarm/frigg'
+      branch: 'master'
+    configure:
+      - args:
+        - 'meson'
+        - '@THIS_SOURCE_DIR@'
+        - '--prefix=/usr'
+        - '--libdir=lib'
+    build:
+      - args: ['ninja']
+      - args: ['ninja', 'install']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+
+
   - name: libasync
     source:
       subdir: 'ports'
@@ -418,6 +436,7 @@ packages:
     pkgs_required:
       - boost
       - cxxshim-coroutine
+      - frigg
     configure: []
     build:
       - args: ['make', '-f', '@THIS_SOURCE_DIR@/library.makefile', 'install']
